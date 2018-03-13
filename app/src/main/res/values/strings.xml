@@ -1,0 +1,6 @@
+<resources xmlns:android="http://schemas.android.com/tools">
+    <string name="app_name">SimpleTwitter</string>
+    <string name="login_success">Login Success !</string>
+    <string name="com.twitter.sdk.android.CONSUMER_KEY">eIvJW0unWhtbJdud5IuW6NmnF</string>
+    <string name="com.twitter.sdk.android.CONSUMER_SECRET">mpTKcZwt88UxXQeMLWP6XAia9UAJ85lpXlerCCBIygobXcXbG7</string>
+</resources>
