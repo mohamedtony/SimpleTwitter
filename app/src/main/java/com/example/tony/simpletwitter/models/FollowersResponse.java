@@ -32,7 +32,7 @@ public class FollowersResponse {
         return users;
     }
 
-    public void setUsers(List<Follower> users) {
+    public void setUsers(ArrayList<Follower> users) {
         this.users = users;
     }
 

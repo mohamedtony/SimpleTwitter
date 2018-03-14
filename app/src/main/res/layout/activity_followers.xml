@@ -6,4 +6,11 @@
     android:layout_height="match_parent"
     tools:context="com.example.tony.simpletwitter.FollowersActivity">
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:background="@color/tw__composer_light_gray"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical" />
+
 </android.support.constraint.ConstraintLayout>

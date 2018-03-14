@@ -1,13 +1,18 @@
 package com.example.tony.simpletwitter.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
 
 /**
  * Created by Tony on 3/13/2018.
  */
 
-public class Follower {
+public class Follower implements Parcelable{
     @SerializedName("id")
     @Expose
     private long id;
@@ -27,6 +32,30 @@ public class Follower {
     @SerializedName("screen_name")
     @Expose
     private String screenName;
+
+    public Follower(){
+
+    }
+
+    protected Follower(Parcel in) {
+        id = in.readLong();
+        description = in.readString();
+        name = in.readString();
+        profilePictureUrl = in.readString();
+        screenName = in.readString();
+    }
+
+    public static final Creator<Follower> CREATOR = new Creator<Follower>() {
+        @Override
+        public Follower createFromParcel(Parcel in) {
+            return new Follower(in);
+        }
+
+        @Override
+        public Follower[] newArray(int size) {
+            return new Follower[size];
+        }
+    };
 
     public String getDescription() {
         return description;
@@ -66,6 +95,20 @@ public class Follower {
 
     public void setScreenName(String screenName) {
         this.screenName = screenName;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeLong(id);
+        parcel.writeString(description);
+        parcel.writeString(name);
+        parcel.writeString(profilePictureUrl);
+        parcel.writeString(screenName);
     }
 }
 
