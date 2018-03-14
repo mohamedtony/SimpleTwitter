@@ -22,8 +22,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SimpleTwitter" />
         <activity android:name=".FollowersActivity"></activity>
+
+        <provider
+            android:authorities="com.example.tony.simpletwitter.contentProvider"
+            android:name="com.example.tony.simpletwitter.contentProvider.FollowersProvider"
+            android:exported="false"
+            />
     </application>
 
 </manifest>

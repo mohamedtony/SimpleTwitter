@@ -3,6 +3,8 @@ package com.example.tony.simpletwitter;
 import android.app.Application;
 import android.util.Log;
 
+import com.squareup.picasso.OkHttpDownloader;
+import com.squareup.picasso.Picasso;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
@@ -22,6 +24,13 @@ public class SimpleTwitter extends Application {
                 .debug(true)
                 .build();
         Twitter.initialize(config);
+
+        Picasso.Builder builder=new Picasso.Builder(this);
+        builder.downloader(new OkHttpDownloader(this,Integer.MAX_VALUE));
+        Picasso built=builder.build();
+        built.setIndicatorsEnabled(true);
+        built.setLoggingEnabled(true);
+        Picasso.setSingletonInstance(built);
 
     }
 }

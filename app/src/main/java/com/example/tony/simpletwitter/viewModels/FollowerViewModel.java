@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import com.example.tony.simpletwitter.BR;
 import com.example.tony.simpletwitter.models.Follower;
 import com.example.tony.simpletwitter.models.FollowerUser;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 /**
@@ -51,9 +53,20 @@ public class FollowerViewModel extends BaseObservable{
     }
 
     @BindingAdapter("app:imageRes")
-    public static void bindImage(ImageView view, String img) {
+    public static void bindImage(final ImageView view, final String img) {
         if(img!=null) {
-            Picasso.with(view.getContext()).load(img).resize(100,100).into(view);
+           // Picasso.with(view.getContext()).load(img).resize(100,100).into(view);
+            Picasso.with(view.getContext()).load(img).networkPolicy(NetworkPolicy.OFFLINE).into(view, new Callback() {
+                @Override
+                public void onSuccess() {
+                    /// success in ofline mode
+                }
+
+                @Override
+                public void onError() {
+                    Picasso.with(view.getContext()).load(img).into(view);
+                }
+            });
         }
     }
 
