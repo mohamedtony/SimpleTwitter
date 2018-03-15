@@ -21,6 +21,7 @@ public class FollowerContract   {
         public static final String COLUMN_FOLLOWER_NAME = "follower_name";
         public static final String COLUMN_FOLLOWER_PHOTOPATH= "follower_photo";
         public static final String COLUMN_FOLLOWER_DESC = "follower_desc";
+        public static final String COLUMN_FOLLOWER_BACK_PHOTO = "follower_back";
 
     }
 

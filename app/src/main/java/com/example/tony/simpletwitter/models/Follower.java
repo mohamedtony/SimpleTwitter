@@ -33,9 +33,10 @@ public class Follower implements Parcelable{
     @Expose
     private String screenName;
 
-    public Follower(){
 
-    }
+    @SerializedName("profile_background_image_url_https")
+    @Expose
+    private String profileBackgroundPictureUrl;
 
     protected Follower(Parcel in) {
         id = in.readLong();
@@ -43,6 +44,7 @@ public class Follower implements Parcelable{
         name = in.readString();
         profilePictureUrl = in.readString();
         screenName = in.readString();
+        profileBackgroundPictureUrl = in.readString();
     }
 
     public static final Creator<Follower> CREATOR = new Creator<Follower>() {
@@ -56,6 +58,21 @@ public class Follower implements Parcelable{
             return new Follower[size];
         }
     };
+
+    public String getProfileBackgroundPictureUrl() {
+        return profileBackgroundPictureUrl;
+    }
+
+    public void setProfileBackgroundPictureUrl(String profileBackgroundPictureUrl) {
+        this.profileBackgroundPictureUrl = profileBackgroundPictureUrl;
+    }
+
+
+    public Follower(){
+
+    }
+
+
 
     public String getDescription() {
         return description;
@@ -104,12 +121,15 @@ public class Follower implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+
         parcel.writeLong(id);
         parcel.writeString(description);
         parcel.writeString(name);
         parcel.writeString(profilePictureUrl);
         parcel.writeString(screenName);
+        parcel.writeString(profileBackgroundPictureUrl);
     }
+
 }
 
 

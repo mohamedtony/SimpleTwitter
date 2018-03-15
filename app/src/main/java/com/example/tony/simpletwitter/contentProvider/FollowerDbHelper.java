@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class FollowerDbHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     private static final String DATABASE_NAME = "follower.db";
 
@@ -25,7 +25,8 @@ public class FollowerDbHelper extends SQLiteOpenHelper {
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_NAME + " TEXT NOT NULL, " +
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID+ " LONG NOT NULL UNIQUE, " +
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_PHOTOPATH + " TEXT, " +
-                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_DESC + " TEXT);";
+                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_DESC + " TEXT, "+
+                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_BACK_PHOTO + " TEXT);";
         db.execSQL(SQL_CREATE_FOLLOWER_TABLE);
     }
 

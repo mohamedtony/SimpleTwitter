@@ -11,48 +11,50 @@ import android.widget.Toast;
 
 import com.example.tony.simpletwitter.R;
 import com.example.tony.simpletwitter.databinding.FollowerItemBinding;
+import com.example.tony.simpletwitter.databinding.TweetItemBinding;
 import com.example.tony.simpletwitter.models.Follower;
+import com.example.tony.simpletwitter.models.TweetModel;
 import com.example.tony.simpletwitter.viewModels.FollowerViewModel;
+import com.example.tony.simpletwitter.viewModels.TweetViewModel;
 import com.example.tony.simpletwitter.views.FollowerProfile;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Created by Tony on 3/14/2018.
+ * Created by Tony on 3/15/2018.
  */
 
-public class FollowersAdapter extends RecyclerView.Adapter {
+public class TweetAdapter extends RecyclerView.Adapter {
     private Context mContext;
-    private ArrayList<Follower> mFollowers;
+    private ArrayList<TweetModel> mTeets;
 
-    public FollowersAdapter(Context mContext, ArrayList<Follower> mFollowers) {
+    public TweetAdapter(Context mContext, ArrayList<TweetModel> mTeets) {
         this.mContext = mContext;
-        this.mFollowers = mFollowers;
+        this.mTeets = mTeets;
 
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        FollowerItemBinding mBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.follower_item, parent, false);
-        return new FollowerViewHolder(mBinding);
+        TweetItemBinding mBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.tweet_item, parent, false);
+        return new TweetAdapter.TweetViewHolder(mBinding);
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        FollowerViewModel followerViewModel=new FollowerViewModel(mContext,mFollowers.get(position));
-        ((FollowerViewHolder) holder).binding.setFollower(followerViewModel);
+        TweetViewModel tweetViewModel=new TweetViewModel(mContext,mTeets.get(position));
+        ((TweetAdapter.TweetViewHolder) holder).binding.setTweet(tweetViewModel);
     }
 
     @Override
     public int getItemCount() {
-        return mFollowers.size();
+        return mTeets.size();
     }
 
-    public class FollowerViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        FollowerItemBinding binding;
+    public class TweetViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+        TweetItemBinding binding;
 
-        public FollowerViewHolder(FollowerItemBinding binding) {
+        public TweetViewHolder(TweetItemBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
             binding.getRoot().setOnClickListener(this);
@@ -63,10 +65,10 @@ public class FollowersAdapter extends RecyclerView.Adapter {
         public void onClick(View view) {
             int pos =getAdapterPosition();
             Toast.makeText(mContext, " you clicked item "+pos, Toast.LENGTH_LONG).show();
-            Intent intent=new Intent(mContext, FollowerProfile.class);
+/*            Intent intent=new Intent(mContext, FollowerProfile.class);
             intent.putExtra("screen_name",mFollowers.get(pos).getScreenName());
             intent.putExtra("follower_obj",mFollowers.get(pos));
-            mContext.startActivity(intent);
+            mContext.startActivity(intent);*/
         }
     }
 }
