@@ -26,7 +26,12 @@
 
         <provider
             android:name=".contentProvider.FollowersProvider"
-            android:authorities="com.example.tony.simpletwitter.contentProvider"
+            android:authorities="com.example.tony.simpletwitter.contentProvider.FollowersProvider"
+            android:exported="false" />
+
+        <provider
+            android:name=".contentProvider.TweetProvider"
+            android:authorities="com.example.tony.simpletwitter.contentProvider.TweetProvider"
             android:exported="false" />
 
         <activity android:name=".views.FollowerProfile"

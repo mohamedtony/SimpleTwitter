@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class FollowerDbHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static final String DATABASE_NAME = "follower.db";
 
@@ -26,13 +26,22 @@ public class FollowerDbHelper extends SQLiteOpenHelper {
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID+ " LONG NOT NULL UNIQUE, " +
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_PHOTOPATH + " TEXT, " +
                 FollowerContract.FollowersEntry.COLUMN_FOLLOWER_DESC + " TEXT, "+
-                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_BACK_PHOTO + " TEXT);";
+                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_BACK_PHOTO + " TEXT, " +
+                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_SCREEN_NAME + " TEXT NOT NULL);";
         db.execSQL(SQL_CREATE_FOLLOWER_TABLE);
+
+        final String SQL_CREATE_TWEET_TABLE = "CREATE TABLE " + TweetContract.TweetsEntry.TABLE_NAME + " (" +
+                TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID+ " LONG NOT NULL, " +
+                TweetContract.TweetsEntry.COLUMN_SCREEN_NAME + " TEXT NOT NULL, " +
+                TweetContract.TweetsEntry.COLUMN_TWEET_ID+ " LONG NOT NULL UNIQUE, " +
+                TweetContract.TweetsEntry.COLUMN_TWEET_TEXT + " TEXT);";
+        db.execSQL(SQL_CREATE_TWEET_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FollowerContract.FollowersEntry.TABLE_NAME);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " +  TweetContract.TweetsEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);
     }
 

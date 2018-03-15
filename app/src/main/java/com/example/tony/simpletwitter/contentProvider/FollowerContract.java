@@ -9,7 +9,7 @@ import android.provider.BaseColumns;
 
 public class FollowerContract   {
 
-    public static final String CONTENT_AUTHORITY = "com.example.tony.simpletwitter.contentProvider";
+    public static final String CONTENT_AUTHORITY = "com.example.tony.simpletwitter.contentProvider.FollowersProvider";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_FOLLOWERS = "followers";
 
@@ -22,6 +22,7 @@ public class FollowerContract   {
         public static final String COLUMN_FOLLOWER_PHOTOPATH= "follower_photo";
         public static final String COLUMN_FOLLOWER_DESC = "follower_desc";
         public static final String COLUMN_FOLLOWER_BACK_PHOTO = "follower_back";
+        public static final String COLUMN_FOLLOWER_SCREEN_NAME = "follower_screen";
 
     }
 

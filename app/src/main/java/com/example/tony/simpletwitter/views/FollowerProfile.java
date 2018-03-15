@@ -3,6 +3,7 @@ package com.example.tony.simpletwitter.views;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -28,6 +29,8 @@ import com.example.tony.simpletwitter.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
 import com.example.tony.simpletwitter.adapters.FollowersAdapter;
 import com.example.tony.simpletwitter.adapters.TweetAdapter;
+import com.example.tony.simpletwitter.contentProvider.FollowerContract;
+import com.example.tony.simpletwitter.contentProvider.TweetContract;
 import com.example.tony.simpletwitter.databinding.ActivityFollowerProfileBinding;
 import com.example.tony.simpletwitter.databinding.ContentNestedscrollBinding;
 import com.example.tony.simpletwitter.databinding.FollowerItemBinding;
@@ -186,7 +189,7 @@ toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                getTweetList();
             }
         } else {
-            //loadFromSqlit();
+            loadFromSqlit();
         }
 
     }
@@ -212,6 +215,30 @@ toolbar.setNavigationOnClickListener(new View.OnClickListener() {
 
         return stateChanged;
     }
+    private void loadFromSqlit() {
+        myTweets=new ArrayList<>();
+
+        Cursor cursor = getContentResolver().query(TweetContract.CONTENT_URI, null, null,null, null);
+        // ToDo: Just for logging, you can remove
+        for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+          //  Toast.makeText(this, " you r in sqlite ", Toast.LENGTH_SHORT).show();
+            if(cursor.getLong(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID))==(mFollower.getId())) {
+                Toast.makeText(this, " you r in sqlite ", Toast.LENGTH_SHORT).show();
+                TweetModel tweetModel = new TweetModel();
+                tweetModel.setText(cursor.getString(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_TWEET_TEXT)));
+                tweetModel.setId(cursor.getLong(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_TWEET_ID)));
+
+                myTweets.add(tweetModel);
+
+                Log.d("tweet", tweetModel.getText());
+            }
+        }
+        tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
+        recyclerView.setAdapter(tweetAdapter);
+        tweetAdapter.notifyDataSetChanged();
+       // swipeRefreshLayout.setRefreshing(false);
+
+    }
 
     public void getTweetList() {
 
@@ -223,7 +250,7 @@ toolbar.setNavigationOnClickListener(new View.OnClickListener() {
         // loggedUserTwitterId = session.getUserId();
         MyTwitterApiClient myTwitterApiClient = new MyTwitterApiClient(session);
 
-        Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(screenName,10);
+        Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(mFollower.getScreenName(),10);
         userCall.enqueue(new Callback<List<TweetModel>>() {
             @Override
             public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {

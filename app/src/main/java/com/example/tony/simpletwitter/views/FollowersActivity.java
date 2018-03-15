@@ -22,8 +22,11 @@ import com.example.tony.simpletwitter.ItemOffsetDecoration;
 import com.example.tony.simpletwitter.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
 import com.example.tony.simpletwitter.adapters.FollowersAdapter;
+import com.example.tony.simpletwitter.adapters.TweetAdapter;
 import com.example.tony.simpletwitter.contentProvider.FollowerContract;
+import com.example.tony.simpletwitter.contentProvider.TweetContract;
 import com.example.tony.simpletwitter.models.Follower;
+import com.example.tony.simpletwitter.models.TweetModel;
 import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterSession;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FollowersActivity extends AppCompatActivity {
@@ -155,6 +159,8 @@ public class FollowersActivity extends AppCompatActivity {
                         values.put(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID, twitterFreindsArrayList.get(k).getId());
                         values.put(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_PHOTOPATH, twitterFreindsArrayList.get(k).getProfilePictureUrl());
                         values.put(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_DESC, twitterFreindsArrayList.get(k).getDescription());
+                        values.put(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_BACK_PHOTO, twitterFreindsArrayList.get(k).getProfileBackgroundPictureUrl());
+                        values.put(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_SCREEN_NAME, twitterFreindsArrayList.get(k).getScreenName());
 
                         Uri uri = getContentResolver().insert(FollowerContract.CONTENT_URI, values);
                         if (uri != null) {
@@ -168,9 +174,88 @@ public class FollowersActivity extends AppCompatActivity {
 
                 return null;
             }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                new AsyncTask<Void, Void, Void>() {
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        saveTweetsToSqlite();
+                        return null;
+                    }
+                }.execute();
+
+
+            }
         }.execute();
 
 
+    }
+
+    public void saveTweetsToSqlite() {
+
+        final TwitterSession session = TwitterCore
+                .getInstance()
+                .getSessionManager()
+                .getActiveSession();
+        TwitterAuthToken authToken = session.getAuthToken();
+        // loggedUserTwitterId = session.getUserId();
+        MyTwitterApiClient myTwitterApiClient = new MyTwitterApiClient(session);
+
+        for (int i = 0; i < twitterFreindsArrayList.size(); i++) {
+            Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(twitterFreindsArrayList.get(i).getScreenName(), 10);
+            final int finalI = i;
+            userCall.enqueue(new Callback<List<TweetModel>>() {
+                @Override
+                public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
+                    if (response.body() != null) {
+                        ArrayList<TweetModel> tweetModels=new ArrayList<>();
+                        tweetModels.addAll(response.body());
+                        for(int k=0;k<tweetModels.size();k++){
+
+
+                            if(!getQueryTweet(tweetModels.get(k).getId())){
+
+                                ContentValues values = new ContentValues();
+                                values.put(TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID,twitterFreindsArrayList.get(finalI).getId());
+                                values.put(TweetContract.TweetsEntry.COLUMN_SCREEN_NAME,twitterFreindsArrayList.get(finalI).getScreenName());
+                                values.put(TweetContract.TweetsEntry.COLUMN_TWEET_ID, tweetModels.get(k).getId());
+                                values.put(TweetContract.TweetsEntry.COLUMN_TWEET_TEXT, tweetModels.get(k).getText());
+
+
+                                Uri uri = getContentResolver().insert(TweetContract.CONTENT_URI, values);
+                                if (uri != null) {
+                                    //  Toast.makeText(FollowersActivity.this, " success " + uri.toString(), Toast.LENGTH_SHORT).show();
+                                    Log.d(" success " , uri.toString());
+
+                                }
+
+                            }
+
+                        }
+
+
+/*                        myTweets.addAll(response.body());
+                        tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
+                        recyclerView.setAdapter(tweetAdapter);
+                        tweetAdapter.notifyDataSetChanged();
+                        // tweetAdapter.notifyDataSetChanged();
+                        Log.i(getClass().getSimpleName() + "Tweet List", myTweets.toString());*/
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<List<TweetModel>> call, Throwable t) {
+                    Log.e(getClass().getSimpleName() + "  failure", call.toString());
+                    Log.e(getClass().getSimpleName() + "  failure", t.getMessage());
+
+
+                }
+            });
+        }
     }
 
     private List fetchResults(Response response) {
@@ -229,13 +314,14 @@ public class FollowersActivity extends AppCompatActivity {
             follower.setId(cursor.getLong(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID)));
             follower.setProfilePictureUrl(cursor.getString(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_PHOTOPATH)));
             follower.setDescription(cursor.getString(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_DESC)));
+            follower.setProfileBackgroundPictureUrl(cursor.getString(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_BACK_PHOTO)));
+            follower.setScreenName(cursor.getString(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_NAME)));
             twitterFreindsArrayList.add(follower);
         }
         adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         swipeRefreshLayout.setRefreshing(false);
-
 
     }
 
@@ -261,5 +347,16 @@ public class FollowersActivity extends AppCompatActivity {
         Boolean stateChanged = activeNetwork != null && activeNetwork.isConnected();
 
         return stateChanged;
+    }
+
+    public boolean getQueryTweet(long id) {
+        Cursor cursor = getContentResolver().query(TweetContract.CONTENT_URI,
+                new String[]{TweetContract.TweetsEntry.COLUMN_TWEET_ID},
+                TweetContract.TweetsEntry.COLUMN_TWEET_ID + "=?",
+                new String[]{String.valueOf(id)},
+                null);
+
+        //  Toast.makeText(this, "cursor=" + cursor.toString(), Toast.LENGTH_SHORT).show();
+        return (cursor != null) && (cursor.getCount() > 0);
     }
 }
