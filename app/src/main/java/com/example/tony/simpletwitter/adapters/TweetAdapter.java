@@ -42,7 +42,7 @@ public class TweetAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        TweetViewModel tweetViewModel=new TweetViewModel(mContext,mTeets.get(position));
+        TweetViewModel tweetViewModel = new TweetViewModel(mContext, mTeets.get(position));
         ((TweetAdapter.TweetViewHolder) holder).binding.setTweet(tweetViewModel);
     }
 
@@ -51,24 +51,13 @@ public class TweetAdapter extends RecyclerView.Adapter {
         return mTeets.size();
     }
 
-    public class TweetViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class TweetViewHolder extends RecyclerView.ViewHolder {
         TweetItemBinding binding;
 
         public TweetViewHolder(TweetItemBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            binding.getRoot().setOnClickListener(this);
-        }
-
-
-        @Override
-        public void onClick(View view) {
-            int pos =getAdapterPosition();
-            Toast.makeText(mContext, " you clicked item "+pos, Toast.LENGTH_LONG).show();
-/*            Intent intent=new Intent(mContext, FollowerProfile.class);
-            intent.putExtra("screen_name",mFollowers.get(pos).getScreenName());
-            intent.putExtra("follower_obj",mFollowers.get(pos));
-            mContext.startActivity(intent);*/
+            //  binding.getRoot().setOnClickListener(this);
         }
     }
 }

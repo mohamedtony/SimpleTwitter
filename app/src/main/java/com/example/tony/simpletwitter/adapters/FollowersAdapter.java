@@ -62,7 +62,7 @@ public class FollowersAdapter extends RecyclerView.Adapter {
         @Override
         public void onClick(View view) {
             int pos =getAdapterPosition();
-            Toast.makeText(mContext, " you clicked item "+pos, Toast.LENGTH_LONG).show();
+         //   Toast.makeText(mContext, " you clicked item "+pos, Toast.LENGTH_LONG).show();
             Intent intent=new Intent(mContext, FollowerProfile.class);
             intent.putExtra("screen_name",mFollowers.get(pos).getScreenName());
             intent.putExtra("follower_obj",mFollowers.get(pos));

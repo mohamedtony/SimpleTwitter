@@ -5,6 +5,7 @@ import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.example.tony.simpletwitter.BR;
@@ -35,7 +36,10 @@ public class FollowerProfileViewModel extends BaseObservable {
     }
     @Bindable
     public String getPhoto(){
+            Log.d("omage",mFollower.getProfilePictureUrl());
             return mFollower.getProfilePictureUrl();
+
+      //  return "https://abs.twimg.com/sticky/default_profile_images/default_profile_4_normal.png";
     }
     public void setPhoto(String photo){
         mFollower.setProfilePictureUrl(photo);
@@ -49,20 +53,12 @@ public class FollowerProfileViewModel extends BaseObservable {
         mFollower.setProfileBackgroundPictureUrl(back);
         notifyPropertyChanged(BR.back);
     }
-/*    @Bindable
-    public String getDesc(){
-        return mFollower.getDescription();
-    }
-    public void setDesc(String desc){
-        mFollower.setDescription(desc);
-        notifyPropertyChanged(BR.desc);
-    }*/
 
-    @BindingAdapter("app:imageRes")
+    @BindingAdapter({"bind:imageRes"})
     public static void bindImage(final ImageView view, final String img) {
         if(img!=null) {
-            // Picasso.with(view.getContext()).load(img).resize(100,100).into(view);
-            view.getId();
+             Picasso.with(view.getContext()).load(img).resize(90,90).into(view);
+/*            view.getId();
             Picasso.with(view.getContext()).load(img).networkPolicy(NetworkPolicy.OFFLINE).into(view, new Callback() {
                 @Override
                 public void onSuccess() {
@@ -73,7 +69,7 @@ public class FollowerProfileViewModel extends BaseObservable {
                 public void onError() {
                     Picasso.with(view.getContext()).load(img).into(view);
                 }
-            });
+            });*/
         }
     }
     @BindingAdapter("app:imageRes1")

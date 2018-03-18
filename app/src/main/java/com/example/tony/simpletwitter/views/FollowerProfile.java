@@ -1,47 +1,49 @@
 package com.example.tony.simpletwitter.views;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.NestedScrollView;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.Toast;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 
+import com.example.tony.simpletwitter.ChangeLanguage;
 import com.example.tony.simpletwitter.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
-import com.example.tony.simpletwitter.adapters.FollowersAdapter;
+import com.example.tony.simpletwitter.TouchImageView;
 import com.example.tony.simpletwitter.adapters.TweetAdapter;
-import com.example.tony.simpletwitter.contentProvider.FollowerContract;
 import com.example.tony.simpletwitter.contentProvider.TweetContract;
 import com.example.tony.simpletwitter.databinding.ActivityFollowerProfileBinding;
-import com.example.tony.simpletwitter.databinding.ContentNestedscrollBinding;
-import com.example.tony.simpletwitter.databinding.FollowerItemBinding;
 import com.example.tony.simpletwitter.models.Follower;
 import com.example.tony.simpletwitter.models.TweetModel;
 import com.example.tony.simpletwitter.viewModels.FollowerProfileViewModel;
+import com.github.chrisbanes.photoview.PhotoViewAttacher;
 import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.tweetui.TweetTimelineListAdapter;
-import com.twitter.sdk.android.tweetui.UserTimeline;
 import com.vatsal.imagezoomer.ZoomAnimation;
 
 import java.util.ArrayList;
@@ -52,147 +54,178 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FollowerProfile extends AppCompatActivity {
-    private ArrayList<TweetModel> myTweets=new ArrayList<>();
+    private static Bundle mBundleRecyclerViewState = null;
+    private final String KEY_RECYCLER_STATE = "recycler_state";
+    public Parcelable listState;
+    private ArrayList<TweetModel> followerTweets = new ArrayList<>();
     private String screenName;
     private CollapsingToolbarLayout collapsingToolbarLayout;
-   private ZoomAnimation zoomAnimation;
-   private Follower mFollower;
-   private TweetAdapter tweetAdapter;
-    private final String KEY_RECYCLER_STATE = "recycler_state";
-    private static Bundle mBundleRecyclerViewState = null;
-    public Parcelable listState;
-    private  RecyclerView recyclerView;
+    private AppBarLayout appBarLayout;
+    private Toolbar toolbar;
+    private ZoomAnimation zoomAnimation;
+    private Follower mFollower;
+    private TweetAdapter tweetAdapter;
+    private RecyclerView recyclerView;
     private NestedScrollView nestedScrollView;
+    private ProgressBar progressBar;
+    private ChangeLanguage changeLanguage;
 
 
     @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-       // setContentView(R.layout.activity_follower_profile);
-        if(getIntent().getExtras()!=null){
-            screenName=getIntent().getExtras().get("screen_name").toString();
-            //   getSupportActionBar().setTitle(screenName);
-            if(getIntent().getExtras().containsKey("follower_obj")) {
+        // setContentView(R.layout.activity_follower_profile);
+        if (getIntent().getExtras() != null) {
+            if (getIntent().getExtras().containsKey("follower_obj")) {
                 mFollower = getIntent().getExtras().getParcelable("follower_obj");
-                if(mFollower!=null) {
-                    Toast.makeText(FollowerProfile.this, " name " + mFollower.getName(), Toast.LENGTH_SHORT).show();
-                }
+
             }
         }
 
-        ActivityFollowerProfileBinding binding= DataBindingUtil.setContentView(this,R.layout.activity_follower_profile);
-        FollowerProfileViewModel loginViewModel= new FollowerProfileViewModel(FollowerProfile.this,mFollower);
+        //=================================== for data binding ==============================================================
+
+        ActivityFollowerProfileBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_follower_profile);
+        FollowerProfileViewModel loginViewModel = new FollowerProfileViewModel(FollowerProfile.this, mFollower);
         binding.setFollowerProfile(loginViewModel);
 
 
+        initViews();
+        setUpRecyclerview();
 
+        final ImageView touchImageView=findViewById(R.id.userProfile);
 
-
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.activity_main_toolbar);
-        setSupportActionBar(toolbar);
-        final ActionBar actionBar = getSupportActionBar();
-       // actionBar.setDisplayHomeAsUpEnabled(true);
-
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        collapsingToolbarLayout.setTitleEnabled(false);
-       /* collapsingToolbarLayout.setTitle("Tony");*/
-        collapsingToolbarLayout.setTitleEnabled(false);
-        collapsingToolbarLayout.setContentScrimColor(Color.parseColor("#00aced"));
-       // actionBar.setTitle("My Title");
-       actionBar.setTitle("");
-
-        AppBarLayout appBarLayout=findViewById(R.id.myAppBar);
-
-        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+        touchImageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-
-                if (Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0)
-                {
-                    //  Collapsed
-                    actionBar.setTitle("@"+screenName);
-                //    Toast.makeText(FollowerProfile.this, " Collapsed ", Toast.LENGTH_SHORT).show();
-                }
-                else
-                {
-                    //Expanded
-                   actionBar.setTitle("");
-
-                }
+            public void onClick(View v) {
+                Display display = getWindowManager().getDefaultDisplay();
+                int width = display.getWidth();
+                int height = display.getHeight();
+                loadPhoto(touchImageView,width,height);
             }
         });
 
-toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-    @Override
-    public void onClick(View view) {
-        FollowerProfile.this.finish();
+
     }
-});
+    private void loadPhoto(ImageView imageView, int width, int height) {
 
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        //dialog.setContentView(R.layout.custom_fullimage_dialog);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        View layout = inflater.inflate(R.layout.custom_fullimage_dialoge,
+                (ViewGroup) findViewById(R.id.layout_root));
+        ImageView image = (ImageView) layout.findViewById(R.id.fullimage);
+        image.setImageDrawable(imageView.getDrawable());
+        image.getLayoutParams().height = height;
+        image.getLayoutParams().width = width;
+       PhotoViewAttacher mAttacher = new PhotoViewAttacher(image);
+        image.requestLayout();
+        dialog.setContentView(layout);
+        dialog.show();
 
-//recycler view
+    }
 
-        nestedScrollView=findViewById(R.id.activity_main_nestedscrollview);
-         recyclerView = findViewById(R.id.my_recycler_view);
+    private void setUpRecyclerview() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
+        tweetAdapter = new TweetAdapter(FollowerProfile.this, followerTweets);
         recyclerView.setAdapter(tweetAdapter);
         recyclerView.setNestedScrollingEnabled(false);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
+    }
 
-//////////============================================click on image =======================================
-        final Activity activity = getParent();
-        ImageButton imageButton = (ImageButton) findViewById(R.id.userProfile);
-        final long duration = 200;
+    private void initViews() {
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
+        appBarLayout = findViewById(R.id.myAppBar);
+        toolbar = (Toolbar) findViewById(R.id.activity_main_toolbar);
+        nestedScrollView = findViewById(R.id.activity_main_nestedscrollview);
+        recyclerView = findViewById(R.id.my_recycler_view);
+        progressBar=(ProgressBar)findViewById(R.id.myProgress);
+        progressBar.setVisibility(View.VISIBLE);
+        changeLanguage=new ChangeLanguage(this);
 
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        setSupportActionBar(toolbar);
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("");
+            toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
+            if(toolbar!=null) {
+                toolbar.getNavigationIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+            }
+        }
+
+
+        collapsingToolbarLayout.setTitleEnabled(false);
+        collapsingToolbarLayout.setContentScrimColor(getResources().getColor(R.color.colorPrimary));
+
+
+        //=======================================get status of the toolbar Collapsed or Expanded ==============================
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             @Override
-            public void onClick(View v) {
-                 zoomAnimation = new ZoomAnimation(FollowerProfile.this);
-                zoomAnimation.zoom(v,duration);
-                //zoomAnimation.set1.end();
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+
+                if (Math.abs(verticalOffset) - appBarLayout.getTotalScrollRange() == 0) {
+                    //  Collapsed
+                    if (actionBar != null)
+                        if (mFollower != null)
+                            actionBar.setTitle("@" + mFollower.getScreenName());
+                    //    Toast.makeText(FollowerProfile.this, " Collapsed ", Toast.LENGTH_SHORT).show();
+                } else {
+                    //Expanded
+                    if (actionBar != null)
+                        actionBar.setTitle("");
+
+                }
             }
         });
 
-/*        imageButton.setOnClickListener(new View.OnClickListener() {
+        //============================================== When Click back button toolbar==================================
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                ZoomAnimation zoomAnimation = new ZoomAnimation(activity);
-                zoomAnimation.zoomReverse(v, duration);
+            public void onClick(View view) {
+                FollowerProfile.this.finish();
             }
-        });*/
+        });
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        if (getNetwork()) {
-            // restore RecyclerView state
-            if (mBundleRecyclerViewState != null) {
-                if (mBundleRecyclerViewState.getParcelableArrayList("m") != null) {
-                    myTweets = mBundleRecyclerViewState.getParcelableArrayList("m");
-                    tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
+
+        // ==========================================restore RecyclerView state======================================
+        if (mBundleRecyclerViewState != null) {
+            if(mBundleRecyclerViewState.containsKey("followerTweets")) {
+                followerTweets = mBundleRecyclerViewState.getParcelableArrayList("followerTweets");
+                if (followerTweets != null && followerTweets.size() != 0) {
+                    tweetAdapter = new TweetAdapter(FollowerProfile.this, followerTweets);
                     recyclerView.setAdapter(tweetAdapter);
                     tweetAdapter.notifyDataSetChanged();
-                    //Toast.makeText(this, " Not null "+twitterFreindsArrayList.get(0).getName(), Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.INVISIBLE);
+                    changeLanguage.loadLocale();
                 }
-
-                Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
-                recyclerView.getLayoutManager().onRestoreInstanceState(listState);
-
-                mBundleRecyclerViewState = null;
-            } else {
-               getTweetList();
             }
+
+            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
+            recyclerView.getLayoutManager().onRestoreInstanceState(listState);
+
+            mBundleRecyclerViewState = null;
+
         } else {
-            loadFromSqlit();
+            if (getNetwork()) {
+                getTweetList();
+            } else {
+                loadFromSqlit();
+            }
         }
 
     }
+
+    //=============================================== saving recyclerview state when rotate =====================================
     @Override
     public void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
@@ -200,46 +233,46 @@ toolbar.setNavigationOnClickListener(new View.OnClickListener() {
         mBundleRecyclerViewState = new Bundle();
         Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
         mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
-        mBundleRecyclerViewState.putParcelableArrayList("m", myTweets);
-        // mBundleRecyclerViewState.putParcelableArrayList("m",twitterFriends);
-        //   mBundleRecyclerViewState.putParcelableArrayList("FollowersList", (ArrayList<? extends Parcelable>) twitterFriends);
+        mBundleRecyclerViewState.putParcelableArrayList("followerTweets", followerTweets);
 
     }
+
+    //======================================================get network status=====================================================
     public boolean getNetwork() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = null;
         if (cm != null) {
             activeNetwork = cm.getActiveNetworkInfo();
         }
-        Boolean stateChanged = activeNetwork != null && activeNetwork.isConnected();
 
-        return stateChanged;
+        return activeNetwork != null && activeNetwork.isConnected();
     }
-    private void loadFromSqlit() {
-        myTweets=new ArrayList<>();
 
-        Cursor cursor = getContentResolver().query(TweetContract.CONTENT_URI, null, null,null, null);
+
+    //============================================load tweet list from sqlite when no network ====================================================
+    private void loadFromSqlit() {
+        followerTweets = new ArrayList<>();
+
+        Cursor cursor = getContentResolver().query(TweetContract.CONTENT_URI, null, null, null, null);
         // ToDo: Just for logging, you can remove
         for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-          //  Toast.makeText(this, " you r in sqlite ", Toast.LENGTH_SHORT).show();
-            if(cursor.getLong(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID))==(mFollower.getId())) {
-                Toast.makeText(this, " you r in sqlite ", Toast.LENGTH_SHORT).show();
+            //  Toast.makeText(this, " you r in sqlite ", Toast.LENGTH_SHORT).show();
+            if (cursor.getLong(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID)) == (mFollower.getId())) {
+
                 TweetModel tweetModel = new TweetModel();
                 tweetModel.setText(cursor.getString(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_TWEET_TEXT)));
                 tweetModel.setId(cursor.getLong(cursor.getColumnIndex(TweetContract.TweetsEntry.COLUMN_TWEET_ID)));
-
-                myTweets.add(tweetModel);
-
-                Log.d("tweet", tweetModel.getText());
+                followerTweets.add(tweetModel);
             }
         }
-        tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
+        tweetAdapter = new TweetAdapter(FollowerProfile.this, followerTweets);
         recyclerView.setAdapter(tweetAdapter);
         tweetAdapter.notifyDataSetChanged();
-       // swipeRefreshLayout.setRefreshing(false);
-
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
+
+    //=========================================== get tweet list from the api when there is network connectivity ==========================
     public void getTweetList() {
 
         final TwitterSession session = TwitterCore
@@ -250,29 +283,28 @@ toolbar.setNavigationOnClickListener(new View.OnClickListener() {
         // loggedUserTwitterId = session.getUserId();
         MyTwitterApiClient myTwitterApiClient = new MyTwitterApiClient(session);
 
-        Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(mFollower.getScreenName(),10);
-        userCall.enqueue(new Callback<List<TweetModel>>() {
-            @Override
-            public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
-                if (response.body()!= null) {
-                    myTweets.addAll(response.body());
-                    tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
-                    recyclerView.setAdapter(tweetAdapter);
-                    tweetAdapter.notifyDataSetChanged();
-                   // tweetAdapter.notifyDataSetChanged();
-                    Log.i(getClass().getSimpleName() + "Tweet List", myTweets.toString());
-                }/*else myTweets.add("Sorry no tweets retrieved for this user");*/
-               /* tweetListAdapter =  new TweetListAdapter((ArrayList)tweets,context);
-                listView.setAdapter(tweetListAdapter);*/
-            }
+        if (mFollower != null) {
+            Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(mFollower.getScreenName(), 10);
+            userCall.enqueue(new Callback<List<TweetModel>>() {
+                @Override
+                public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
+                    if (response.body() != null) {
+                        followerTweets.addAll(response.body());
+                        tweetAdapter = new TweetAdapter(FollowerProfile.this, followerTweets);
+                        recyclerView.setAdapter(tweetAdapter);
+                        tweetAdapter.notifyDataSetChanged();
+                        progressBar.setVisibility(View.INVISIBLE);
+                    }
+                }
 
-            @Override
-            public void onFailure(Call<List<TweetModel>> call, Throwable t) {
-                Log.e(getClass().getSimpleName() + "  failure" , call.toString());
-                Log.e(getClass().getSimpleName() + "  failure" , t.getMessage());
+                @Override
+                public void onFailure(Call<List<TweetModel>> call, Throwable t) {
+                    Log.e(getClass().getSimpleName() + "  failure", call.toString());
+                    Log.e(getClass().getSimpleName() + "  failure", t.getMessage());
 
 
-            }
-        });
+                }
+            });
+        }
     }
 }

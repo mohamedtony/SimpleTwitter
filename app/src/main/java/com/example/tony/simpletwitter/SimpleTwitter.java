@@ -18,6 +18,10 @@ public class SimpleTwitter extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        ChangeLanguage changeLanguage=new ChangeLanguage(this);
+        changeLanguage.loadLocale();
+
+
         TwitterConfig config = new TwitterConfig.Builder(this)
                 .logger(new DefaultLogger(Log.DEBUG))
                 .twitterAuthConfig(new TwitterAuthConfig("eIvJW0unWhtbJdud5IuW6NmnF", "mpTKcZwt88UxXQeMLWP6XAia9UAJ85lpXlerCCBIygobXcXbG7"))
@@ -25,6 +29,8 @@ public class SimpleTwitter extends Application {
                 .build();
         Twitter.initialize(config);
 
+
+        //======================================= to chache images when no network connectivity===============================
         Picasso.Builder builder=new Picasso.Builder(this);
         builder.downloader(new OkHttpDownloader(this,Integer.MAX_VALUE));
         Picasso built=builder.build();

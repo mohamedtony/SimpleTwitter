@@ -4,13 +4,10 @@ import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.databinding.BindingAdapter;
-import android.databinding.ObservableArrayList;
-import android.databinding.ObservableField;
 import android.widget.ImageView;
 
 import com.example.tony.simpletwitter.BR;
 import com.example.tony.simpletwitter.models.Follower;
-import com.example.tony.simpletwitter.models.FollowerUser;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
@@ -52,6 +49,7 @@ public class FollowerViewModel extends BaseObservable{
         notifyPropertyChanged(BR.desc);
     }
 
+    //========================================================== to set image res=========================
     @BindingAdapter("app:imageRes")
     public static void bindImage(final ImageView view, final String img) {
         if(img!=null) {

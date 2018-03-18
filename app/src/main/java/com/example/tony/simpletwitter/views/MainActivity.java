@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.tony.simpletwitter.R;
@@ -31,40 +32,37 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences pref = getApplicationContext().getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
 
 
-        if(pref.getBoolean(IS_LOGED_IN,false)){
-            Intent intent=new Intent(MainActivity.this, FollowersActivity.class);
-           // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        }else {
+        //================================Login Button Ref:==> https://github.com/twitter/twitter-kit-android/wiki/Log-In-with-Twitter ================
+        loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
+        loginButton.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                // Do something with result, which provides a TwitterSession for making API calls
+                TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                TwitterAuthToken twitterAuthToken = twitterSession.getAuthToken();
 
-            loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
-            loginButton.setCallback(new Callback<TwitterSession>() {
-                @Override
-                public void success(Result<TwitterSession> result) {
-                    // Do something with result, which provides a TwitterSession for making API calls
-                    TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-                    TwitterAuthToken twitterAuthToken = twitterSession.getAuthToken();
+                Toast.makeText(MainActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
 
-                    Toast.makeText(MainActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putBoolean(IS_LOGED_IN, true);
+                editor.putLong(USER_ID, result.data.getUserId());
+                editor.putString(AuthToken, String.valueOf(result.data.getAuthToken()));
+                editor.commit();
 
-                    SharedPreferences.Editor editor = pref.edit();
-                    editor.putBoolean(IS_LOGED_IN, true);
-                    editor.putLong(USER_ID, result.data.getUserId());
-                    editor.putString(AuthToken, String.valueOf(result.data.getAuthToken()));
-                    editor.commit();
-                    Intent intent = new Intent(MainActivity.this, FollowersActivity.class);
-                    startActivity(intent);
-                }
+                //============================ To Start The Second Activity =========================
+                Intent intent = new Intent(MainActivity.this, FollowersActivity.class);
+                startActivity(intent);
+                finish();
+            }
 
-                @Override
-                public void failure(TwitterException exception) {
-                    // Do something on failure
-                    Toast.makeText(MainActivity.this, exception.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-        }
+            @Override
+            public void failure(TwitterException exception) {
+                // Do something on failure
+                Log.d(this.getClass().getName(), exception.getMessage());
+            }
+        });
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

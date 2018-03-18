@@ -2,6 +2,7 @@ package com.example.tony.simpletwitter.views;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -11,22 +12,25 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.example.tony.simpletwitter.ChangeLanguage;
 import com.example.tony.simpletwitter.ItemOffsetDecoration;
 import com.example.tony.simpletwitter.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
 import com.example.tony.simpletwitter.adapters.FollowersAdapter;
-import com.example.tony.simpletwitter.adapters.TweetAdapter;
 import com.example.tony.simpletwitter.contentProvider.FollowerContract;
-import com.example.tony.simpletwitter.contentProvider.TweetContract;
 import com.example.tony.simpletwitter.models.Follower;
-import com.example.tony.simpletwitter.models.TweetModel;
 import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterSession;
@@ -36,10 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FollowersActivity extends AppCompatActivity {
+    private static Bundle mBundleRecyclerViewState = null;
+    private final String KEY_RECYCLER_STATE = "recycler_state";
+    public Parcelable listState;
     private List<Follower> twitterFriends = new ArrayList<>();
     private ArrayList<Follower> twitterFreindsArrayList = new ArrayList<>();
     private ArrayList friendsList = new ArrayList();
@@ -47,22 +53,139 @@ public class FollowersActivity extends AppCompatActivity {
     private long loggedUserTwitterId;
     private RecyclerView recyclerView;
     private FollowersAdapter adapter;
-
-    private final String KEY_RECYCLER_STATE = "recycler_state";
-    private static Bundle mBundleRecyclerViewState = null;
-    public Parcelable listState;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private ChangeLanguage changeLang;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_followers);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(true);
 
-         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        initViews();
+        setUpRecyclerView();
+        setUpSwipeToRefresh();
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
 
-        //============================ for Recycler view==============
+        // restore RecyclerView state
+        if (mBundleRecyclerViewState != null) {
+            if (mBundleRecyclerViewState.containsKey("twitter_arraylist")) {
+                twitterFreindsArrayList = mBundleRecyclerViewState.getParcelableArrayList("twitter_arraylist");
+                if (twitterFreindsArrayList != null && twitterFreindsArrayList.size() != 0) {
+
+                    adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
+                    recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                    changeLang.loadLocale();
+                }
+            }
+
+            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
+            recyclerView.getLayoutManager().onRestoreInstanceState(listState);
+
+            mBundleRecyclerViewState = null;
+            swipeRefreshLayout.setRefreshing(false);
+        } else {
+
+            if (getNetwork()) {
+                getFollowerList();
+            } else {
+                loadFromSqlit();
+            }
+
+        }
+    }
+
+    //===============================================================To save Recycler View State when rotate===========================
+
+    @Override
+    public void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+
+        mBundleRecyclerViewState = new Bundle();
+        Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
+        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
+        mBundleRecyclerViewState.putParcelableArrayList("twitter_arraylist", twitterFreindsArrayList);
+
+    }
+
+
+    //============================================== When Click back button toolbar==================================
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);//Menu Resource, Menu
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        String lang="";
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // todo: goto back activity from here
+
+                Intent intent = new Intent(FollowersActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+                return true;
+
+            case R.id.english:
+                lang = "en";
+                finish();
+                startActivity(getIntent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK));
+                changeLang.changeLang(lang);
+                Toast.makeText(this, getString(R.string.lang_success), Toast.LENGTH_SHORT).show();
+                return true;
+
+            case R.id.arabic:
+                lang = "ar";
+                finish();
+                startActivity(getIntent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK));
+                changeLang.changeLang(lang);
+                Toast.makeText(this, getString(R.string.lang_success), Toast.LENGTH_SHORT).show();
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        changeLang.loadLocale();
+/*        getBaseContext().getResources().updateConfiguration(newConfig, getBaseContext().getResources().getDisplayMetrics());
+        setContentView(R.layout.main);
+        setTitle(R.string.app_name);
+
+        // Checks the active language
+        if (newConfig.locale == Locale.ENGLISH) {
+            Toast.makeText(this, "English", Toast.LENGTH_SHORT).show();
+        } else if (newConfig.locale == Locale.FRENCH){
+            Toast.makeText(this, "French", Toast.LENGTH_SHORT).show();*/
+        //}
+    }
+
+    //========================================================================================================
+    private void initViews() {
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recycler_view);
+        changeLang=new ChangeLanguage(this);
+    }
+
+    //==================================================================================
+    private void setUpRecyclerView() {
+        //============================ for Recycler view==============
+
         if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
             ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
@@ -73,27 +196,32 @@ public class FollowersActivity extends AppCompatActivity {
         }
         adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
         recyclerView.setAdapter(adapter);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        // recyclerView.setItemAnimator(new DefaultItemAnimator());
+
+    }
+
+    //========================================================================================================
+    private void setUpSwipeToRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 // Your recyclerview reload logic function will be here!!!
-                if(getNetwork()) {
+                if (getNetwork()) {
                     getFollowerList();
-                }else{
+                } else {
                     loadFromSqlit();
                 }
             }
         });
-
-
     }
 
     public void getFollowerList() {
 
         //Creating a twitter session with result's data
-        //   final TwitterSession session = result.data;
+        //==================================================Creating a twitter session with result's data====================
+        //============== Ref: http://www.onlineicttutor.com/twitter-login-get-follower-list-send-message-android/ ===========
+        twitterFreindsArrayList = new ArrayList<>();
 
 
         final TwitterSession session = TwitterCore
@@ -109,26 +237,29 @@ public class FollowersActivity extends AppCompatActivity {
                 Log.e("onResponse", response.toString());
 
                 if (response.code() == 200) {
-                    twitterFreindsArrayList=new ArrayList<>();
-                    twitterFriends=new ArrayList<>();
+                    //  twitterFreindsArrayList = new ArrayList<>();
+                    twitterFriends = new ArrayList<>();
                     twitterFriends = fetchResults(response);
 
                     Log.e("onResponse", "twitterfriends:" + twitterFriends.size());
 
                     for (int k = 0; k < twitterFriends.size(); k++) {
 
-                        twitterFreindsArrayList.add(twitterFriends.get(k));
+                        Follower follower = new Follower();
+                        follower.setScreenName(twitterFriends.get(k).getScreenName());
+                        follower.setProfileBackgroundPictureUrl(twitterFriends.get(k).getProfileBackgroundPictureUrl());
+                        follower.setDescription(twitterFriends.get(k).getDescription());
+                        follower.setName(twitterFriends.get(k).getName());
+                        follower.setProfilePictureUrl(twitterFriends.get(k).getProfilePictureUrl());
+                        follower.setId(twitterFriends.get(k).getId());
+                        twitterFreindsArrayList.add(follower);
 
-                        friendsList.add(twitterFriends.get(k).getName());
-                        Log.e("Twitter Friends", "Id:" + twitterFriends.get(k).getProfileBackgroundPictureUrl() + " Name:" + twitterFriends.get(k).getName() + " pickUrl:" + twitterFriends.get(k).getProfilePictureUrl() + " desc " + twitterFriends.get(k).getDescription());
                     }
-                    //  listAdapter.notifyDataSetChanged();
                     adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
                     recyclerView.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
-                    saveTOCache();
-                    // Stop refreshing
                     swipeRefreshLayout.setRefreshing(false);
+                    saveTOCache();
                 }
             }
 
@@ -142,6 +273,8 @@ public class FollowersActivity extends AppCompatActivity {
     }
 
     private void saveTOCache() {
+        //================================ saving to sqlite with content provider=============Ref : Android developer Nanodegree Scholarship ==================================
+
 
         new AsyncTask<Void, Void, Void>() {
 
@@ -150,8 +283,8 @@ public class FollowersActivity extends AppCompatActivity {
                 for (int k = 0; k < twitterFreindsArrayList.size(); k++) {
 
                     if (getQuery(twitterFreindsArrayList.get(k).getId())) {
-                      //  Toast.makeText(FollowersActivity.this, " add before " + twitterFreindsArrayList.get(k).getName(), Toast.LENGTH_SHORT).show();
-                        Log.d(" m add",twitterFreindsArrayList.get(k).getName());
+                        //  Toast.makeText(FollowersActivity.this, " add before " + twitterFreindsArrayList.get(k).getName(), Toast.LENGTH_SHORT).show();
+                        Log.d(" m add", twitterFreindsArrayList.get(k).getName());
                     } else {
 
                         ContentValues values = new ContentValues();
@@ -164,8 +297,8 @@ public class FollowersActivity extends AppCompatActivity {
 
                         Uri uri = getContentResolver().insert(FollowerContract.CONTENT_URI, values);
                         if (uri != null) {
-                          //  Toast.makeText(FollowersActivity.this, " success " + uri.toString(), Toast.LENGTH_SHORT).show();
-                            Log.d(" success " , uri.toString());
+                            //  Toast.makeText(FollowersActivity.this, " success " + uri.toString(), Toast.LENGTH_SHORT).show();
+                            Log.d(" success ", uri.toString());
 
                         }
                     }
@@ -174,137 +307,33 @@ public class FollowersActivity extends AppCompatActivity {
 
                 return null;
             }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                new AsyncTask<Void, Void, Void>() {
-
-                    @Override
-                    protected Void doInBackground(Void... voids) {
-                        saveTweetsToSqlite();
-                        return null;
-                    }
-                }.execute();
-
-
-            }
         }.execute();
 
 
     }
 
-    public void saveTweetsToSqlite() {
+    //======================================= To check is follower in sqlite or not ==========================================
+    public boolean getQuery(long id) {
+        Cursor cursor = getContentResolver().query(FollowerContract.CONTENT_URI,
+                new String[]{FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID},
+                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID + "=?",
+                new String[]{String.valueOf(id)},
+                null);
 
-        final TwitterSession session = TwitterCore
-                .getInstance()
-                .getSessionManager()
-                .getActiveSession();
-        TwitterAuthToken authToken = session.getAuthToken();
-        // loggedUserTwitterId = session.getUserId();
-        MyTwitterApiClient myTwitterApiClient = new MyTwitterApiClient(session);
-
-        for (int i = 0; i < twitterFreindsArrayList.size(); i++) {
-            Call<List<TweetModel>> userCall = myTwitterApiClient.getMyCustomService().list(twitterFreindsArrayList.get(i).getScreenName(), 10);
-            final int finalI = i;
-            userCall.enqueue(new Callback<List<TweetModel>>() {
-                @Override
-                public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
-                    if (response.body() != null) {
-                        ArrayList<TweetModel> tweetModels=new ArrayList<>();
-                        tweetModels.addAll(response.body());
-                        for(int k=0;k<tweetModels.size();k++){
-
-
-                            if(!getQueryTweet(tweetModels.get(k).getId())){
-
-                                ContentValues values = new ContentValues();
-                                values.put(TweetContract.TweetsEntry.COLUMN_FOLLOWER_ID,twitterFreindsArrayList.get(finalI).getId());
-                                values.put(TweetContract.TweetsEntry.COLUMN_SCREEN_NAME,twitterFreindsArrayList.get(finalI).getScreenName());
-                                values.put(TweetContract.TweetsEntry.COLUMN_TWEET_ID, tweetModels.get(k).getId());
-                                values.put(TweetContract.TweetsEntry.COLUMN_TWEET_TEXT, tweetModels.get(k).getText());
-
-
-                                Uri uri = getContentResolver().insert(TweetContract.CONTENT_URI, values);
-                                if (uri != null) {
-                                    //  Toast.makeText(FollowersActivity.this, " success " + uri.toString(), Toast.LENGTH_SHORT).show();
-                                    Log.d(" success " , uri.toString());
-
-                                }
-
-                            }
-
-                        }
-
-
-/*                        myTweets.addAll(response.body());
-                        tweetAdapter = new TweetAdapter(FollowerProfile.this, myTweets);
-                        recyclerView.setAdapter(tweetAdapter);
-                        tweetAdapter.notifyDataSetChanged();
-                        // tweetAdapter.notifyDataSetChanged();
-                        Log.i(getClass().getSimpleName() + "Tweet List", myTweets.toString());*/
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<List<TweetModel>> call, Throwable t) {
-                    Log.e(getClass().getSimpleName() + "  failure", call.toString());
-                    Log.e(getClass().getSimpleName() + "  failure", t.getMessage());
-
-
-                }
-            });
-        }
+        //  Toast.makeText(this, "cursor=" + cursor.toString(), Toast.LENGTH_SHORT).show();
+        return (cursor != null) && (cursor.getCount() > 0);
     }
 
+    //====================================================== To return list data response=====================================
     private List fetchResults(Response response) {
         com.example.tony.simpletwitter.models.FollowersResponse responseModel = (com.example.tony.simpletwitter.models.FollowersResponse) response.body();
         return responseModel.getUsers();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
 
-        if (getNetwork()) {
-            // restore RecyclerView state
-            if (mBundleRecyclerViewState != null) {
-                if (mBundleRecyclerViewState.getParcelableArrayList("m") != null) {
-                    twitterFreindsArrayList = mBundleRecyclerViewState.getParcelableArrayList("m");
-                    adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                    //Toast.makeText(this, " Not null "+twitterFreindsArrayList.get(0).getName(), Toast.LENGTH_SHORT).show();
-                }
-
-                Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
-                recyclerView.getLayoutManager().onRestoreInstanceState(listState);
-
-                mBundleRecyclerViewState = null;
-            } else {
-                getFollowerList();
-            }
-        } else {
-            loadFromSqlit();
-        }
-
-    }
-    @Override
-    public void onSaveInstanceState(Bundle state) {
-        super.onSaveInstanceState(state);
-
-        mBundleRecyclerViewState = new Bundle();
-        Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
-        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
-        mBundleRecyclerViewState.putParcelableArrayList("m", twitterFreindsArrayList);
-        // mBundleRecyclerViewState.putParcelableArrayList("m",twitterFriends);
-        //   mBundleRecyclerViewState.putParcelableArrayList("FollowersList", (ArrayList<? extends Parcelable>) twitterFriends);
-
-    }
-
+    //=================================================== to retrieve data from sqlite ==================================================
     private void loadFromSqlit() {
-        twitterFreindsArrayList=new ArrayList<>();
+        twitterFreindsArrayList = new ArrayList<>();
         Cursor cursor = getContentResolver().query(FollowerContract.CONTENT_URI, null, null, null, null);
         // ToDo: Just for logging, you can remove
         for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
@@ -322,21 +351,10 @@ public class FollowersActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         swipeRefreshLayout.setRefreshing(false);
-
     }
 
 
-
-    public boolean getQuery(long id) {
-        Cursor cursor = getContentResolver().query(FollowerContract.CONTENT_URI,
-                new String[]{FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID},
-                FollowerContract.FollowersEntry.COLUMN_FOLLOWER_ID + "=?",
-                new String[]{String.valueOf(id)},
-                null);
-
-        //  Toast.makeText(this, "cursor=" + cursor.toString(), Toast.LENGTH_SHORT).show();
-        return (cursor != null) && (cursor.getCount() > 0);
-    }
+//======================================== To check network connectivity ==============================================
 
     public boolean getNetwork() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -344,19 +362,7 @@ public class FollowersActivity extends AppCompatActivity {
         if (cm != null) {
             activeNetwork = cm.getActiveNetworkInfo();
         }
-        Boolean stateChanged = activeNetwork != null && activeNetwork.isConnected();
 
-        return stateChanged;
-    }
-
-    public boolean getQueryTweet(long id) {
-        Cursor cursor = getContentResolver().query(TweetContract.CONTENT_URI,
-                new String[]{TweetContract.TweetsEntry.COLUMN_TWEET_ID},
-                TweetContract.TweetsEntry.COLUMN_TWEET_ID + "=?",
-                new String[]{String.valueOf(id)},
-                null);
-
-        //  Toast.makeText(this, "cursor=" + cursor.toString(), Toast.LENGTH_SHORT).show();
-        return (cursor != null) && (cursor.getCount() > 0);
+        return activeNetwork != null && activeNetwork.isConnected();
     }
 }

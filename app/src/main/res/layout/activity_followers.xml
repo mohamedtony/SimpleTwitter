@@ -4,13 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.tony.simpletwitter.views.FollowersActivity">
+    android:layoutDirection="locale"
+    tools:context="com.example.tony.simpletwitter.views.FollowersActivity"
+    tools:targetApi="jelly_bean_mr1">
 
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        >
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -20,6 +23,7 @@
         android:scrollbars="vertical"
         android:clipToPadding="false"
         android:padding="@dimen/item_offset"
+        android:layoutDirection="locale"
         />
     </android.support.v4.widget.SwipeRefreshLayout>
 
