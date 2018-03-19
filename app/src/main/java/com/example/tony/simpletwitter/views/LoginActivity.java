@@ -41,41 +41,6 @@ public class LoginActivity extends AppCompatActivity {
 
         //================================Login Button Ref:==> https://github.com/twitter/twitter-kit-android/wiki/Log-In-with-Twitter ================
         loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
-
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(getNetwork()){
-                    login();
-                }else{
-                    showSnackBar();
-                }
-            }
-        });
-
-
-
-    }
-
-    private void showSnackBar() {
-
-        ConstraintLayout constraintLayout=(ConstraintLayout)findViewById(R.id.parentView);
-        Snackbar.make(constraintLayout, R.string.snackbar_text, Snackbar.LENGTH_LONG)
-                .setAction(R.string.snackbar_action, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if(getNetwork()){
-                            login();
-                        }else{
-                            showSnackBar();
-                        }
-                    }
-                })
-                .show(); // Don’t forget to show!
-    }
-
-    private void login() {
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
@@ -101,10 +66,83 @@ public class LoginActivity extends AppCompatActivity {
             public void failure(TwitterException exception) {
                 // Do something on failure
                 Log.d(this.getClass().getName(), exception.getMessage());
+                if(!getNetwork()){
+                    showSnackBar();
+                }
             }
         });
+
     }
 
+    private void showSnackBar() {
+
+        ConstraintLayout constraintLayout=(ConstraintLayout)findViewById(R.id.parentView);
+        Snackbar.make(constraintLayout, R.string.snackbar_text, Snackbar.LENGTH_LONG)
+                .setAction(R.string.snackbar_action, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(getNetwork()){
+                           loginWithSnack();
+
+                        }else{
+                            showSnackBar();
+                        }
+                        loginButton.setCallback(new Callback<TwitterSession>() {
+                            @Override
+                            public void success(Result<TwitterSession> result) {
+                                // Do something with result, which provides a TwitterSession for making API calls
+                               login(result);
+                            }
+
+                            @Override
+                            public void failure(TwitterException exception) {
+                                // Do something on failure
+                                Log.d(this.getClass().getName(), exception.getMessage());
+                                if(!getNetwork()){
+                                    showSnackBar();
+                                }
+                            }
+                        });
+                    }
+                }).setDuration(4000)
+                .show(); // Don’t forget to show!
+    }
+
+    private void loginWithSnack() {
+        TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        TwitterAuthToken twitterAuthToken = twitterSession.getAuthToken();
+
+       // Toast.makeText(LoginActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
+
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean(IS_LOGED_IN, true);
+        //  editor.putLong(USER_ID, result.data.getUserId());
+        //editor.putString(AuthToken, String.valueOf(result.data.getAuthToken()));
+        editor.commit();
+
+        //============================ To Start The Second Activity =========================
+        Intent intent = new Intent(LoginActivity.this, FollowersActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void login(Result<TwitterSession> result) {
+        TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        TwitterAuthToken twitterAuthToken = twitterSession.getAuthToken();
+
+        Toast.makeText(LoginActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
+
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean(IS_LOGED_IN, true);
+        editor.putLong(USER_ID, result.data.getUserId());
+        editor.putString(AuthToken, String.valueOf(result.data.getAuthToken()));
+        editor.commit();
+
+        //============================ To Start The Second Activity =========================
+        Intent intent = new Intent(LoginActivity.this, FollowersActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

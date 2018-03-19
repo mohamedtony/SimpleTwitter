@@ -81,8 +81,10 @@ public class FollowersActivity extends AppCompatActivity {
                 twitterFreindsArrayList = mBundleRecyclerViewState.getParcelableArrayList("twitter_arraylist");
                 if (twitterFreindsArrayList != null && twitterFreindsArrayList.size() != 0) {
 
-                    adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
+                    /*adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
                     recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();*/
+                    setUpRecyclerView();
                     adapter.notifyDataSetChanged();
                     changeLang.loadLocale();
                 }
@@ -187,8 +189,8 @@ public class FollowersActivity extends AppCompatActivity {
 
         if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-            ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
-            recyclerView.addItemDecoration(itemDecoration);
+           /* ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
+            recyclerView.addItemDecoration(itemDecoration);*/
 
         } else {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -254,9 +256,10 @@ public class FollowersActivity extends AppCompatActivity {
                         twitterFreindsArrayList.add(follower);
 
                     }
-                    adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                  /*  adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
+                    recyclerView.setAdapter(adapter);*/
+                    setUpRecyclerView();
+                 //   adapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
                     saveTOCache();
                 }
@@ -346,9 +349,10 @@ public class FollowersActivity extends AppCompatActivity {
             follower.setScreenName(cursor.getString(cursor.getColumnIndex(FollowerContract.FollowersEntry.COLUMN_FOLLOWER_NAME)));
             twitterFreindsArrayList.add(follower);
         }
-        adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
+      /*  adapter = new FollowersAdapter(FollowersActivity.this, twitterFreindsArrayList);
         recyclerView.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();*/
+        setUpRecyclerView();
         swipeRefreshLayout.setRefreshing(false);
     }
 
