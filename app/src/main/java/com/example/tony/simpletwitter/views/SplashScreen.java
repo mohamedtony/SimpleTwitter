@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.tony.simpletwitter.ChangeLanguage;
+import com.example.tony.simpletwitter.utilities.ChangeLanguage;
 import com.example.tony.simpletwitter.R;
 
 public class SplashScreen extends AppCompatActivity {
@@ -42,7 +42,7 @@ public class SplashScreen extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 }else {
-                    Intent i = new Intent(SplashScreen.this, MainActivity.class);
+                    Intent i = new Intent(SplashScreen.this, LoginActivity.class);
                     startActivity(i);
 
                     // close this activity

@@ -16,7 +16,7 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private static String SHARED_PREFS = "MyPref";
     private static String IS_LOGED_IN = "isLoged";
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
                 TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
                 TwitterAuthToken twitterAuthToken = twitterSession.getAuthToken();
 
-                Toast.makeText(MainActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, getString(R.string.login_success) + result.data.getUserName(), Toast.LENGTH_LONG).show();
 
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putBoolean(IS_LOGED_IN, true);
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.commit();
 
                 //============================ To Start The Second Activity =========================
-                Intent intent = new Intent(MainActivity.this, FollowersActivity.class);
+                Intent intent = new Intent(LoginActivity.this, FollowersActivity.class);
                 startActivity(intent);
                 finish();
             }

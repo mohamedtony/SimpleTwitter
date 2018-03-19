@@ -57,8 +57,8 @@ public class FollowerProfileViewModel extends BaseObservable {
     @BindingAdapter({"bind:imageRes"})
     public static void bindImage(final ImageView view, final String img) {
         if(img!=null) {
-             Picasso.with(view.getContext()).load(img).resize(90,90).into(view);
-/*            view.getId();
+           //  Picasso.with(view.getContext()).load(img).resize(90,90).into(view);
+            view.getId();
             Picasso.with(view.getContext()).load(img).networkPolicy(NetworkPolicy.OFFLINE).into(view, new Callback() {
                 @Override
                 public void onSuccess() {
@@ -69,7 +69,7 @@ public class FollowerProfileViewModel extends BaseObservable {
                 public void onError() {
                     Picasso.with(view.getContext()).load(img).into(view);
                 }
-            });*/
+            });
         }
     }
     @BindingAdapter("app:imageRes1")

@@ -1,4 +1,4 @@
-package com.example.tony.simpletwitter;
+package com.example.tony.simpletwitter.utilities;
 
 import android.content.Context;
 import android.graphics.Rect;

@@ -30,10 +30,9 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-import com.example.tony.simpletwitter.ChangeLanguage;
-import com.example.tony.simpletwitter.MyTwitterApiClient;
+import com.example.tony.simpletwitter.utilities.ChangeLanguage;
+import com.example.tony.simpletwitter.utilities.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
-import com.example.tony.simpletwitter.TouchImageView;
 import com.example.tony.simpletwitter.adapters.TweetAdapter;
 import com.example.tony.simpletwitter.contentProvider.TweetContract;
 import com.example.tony.simpletwitter.databinding.ActivityFollowerProfileBinding;
@@ -93,7 +92,30 @@ public class FollowerProfile extends AppCompatActivity {
         initViews();
         setUpRecyclerview();
 
+
+        //============================================== To Zoom An Image When Click ===========================================
+        //============================================Ref: https://stackoverflow.com/questions/7693633/android-image-dialog-popup===
+        //==================================================== Ref: https://github.com/MikeOrtiz/TouchImageView ========================
         final ImageView touchImageView=findViewById(R.id.userProfile);
+        final ImageView bakground=findViewById(R.id.user_image_back);
+        collapsingToolbarLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Display display = getWindowManager().getDefaultDisplay();
+                int width = display.getWidth();
+                int height = display.getHeight();
+                loadPhoto(bakground,width,height);
+            }
+        });
+        bakground.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Display display = getWindowManager().getDefaultDisplay();
+                int width = display.getWidth();
+                int height = display.getHeight();
+                loadPhoto(bakground,width,height);
+            }
+        });
 
         touchImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,6 +129,8 @@ public class FollowerProfile extends AppCompatActivity {
 
 
     }
+
+    //============================================== To Make Image Zoom ==================================
     private void loadPhoto(ImageView imageView, int width, int height) {
 
         final Dialog dialog = new Dialog(this);
@@ -273,6 +297,7 @@ public class FollowerProfile extends AppCompatActivity {
 
 
     //=========================================== get tweet list from the api when there is network connectivity ==========================
+    //========================================== Ref: https://github.com/twitter/twitter-kit-android/wiki/Show-Tweets======================
     public void getTweetList() {
 
         final TwitterSession session = TwitterCore

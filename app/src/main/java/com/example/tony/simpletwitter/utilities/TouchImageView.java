@@ -1,4 +1,4 @@
-package com.example.tony.simpletwitter;
+package com.example.tony.simpletwitter.utilities;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -22,7 +22,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.ImageView;
 import android.widget.OverScroller;
 import android.widget.Scroller;
 /**

@@ -3,9 +3,9 @@
     android:id="@+id/layout_root" android:orientation="horizontal"
     android:layout_width="fill_parent" android:layout_height="fill_parent"
     android:padding="10dp">
-    <com.example.tony.simpletwitter.TouchImageView
+    <com.example.tony.simpletwitter.utilities.TouchImageView
         android:id="@+id/fullimage" android:layout_width="fill_parent"
         android:layout_height="fill_parent">
-    </com.example.tony.simpletwitter.TouchImageView>
+    </com.example.tony.simpletwitter.utilities.TouchImageView>
 
 </LinearLayout>

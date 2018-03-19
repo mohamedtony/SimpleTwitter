@@ -3,6 +3,7 @@ package com.example.tony.simpletwitter.views;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -14,19 +15,17 @@ import android.os.Parcelable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.example.tony.simpletwitter.ChangeLanguage;
-import com.example.tony.simpletwitter.ItemOffsetDecoration;
-import com.example.tony.simpletwitter.MyTwitterApiClient;
+import com.example.tony.simpletwitter.utilities.ChangeLanguage;
+import com.example.tony.simpletwitter.utilities.ItemOffsetDecoration;
+import com.example.tony.simpletwitter.utilities.MyTwitterApiClient;
 import com.example.tony.simpletwitter.R;
 import com.example.tony.simpletwitter.adapters.FollowersAdapter;
 import com.example.tony.simpletwitter.contentProvider.FollowerContract;
@@ -55,6 +54,8 @@ public class FollowersActivity extends AppCompatActivity {
     private FollowersAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ChangeLanguage changeLang;
+    private static String SHARED_PREFS = "MyPref";
+    private static String IS_LOGED_IN = "isLoged";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +64,7 @@ public class FollowersActivity extends AppCompatActivity {
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null)
-            actionBar.setDisplayHomeAsUpEnabled(true);
+       //    actionBar.setDisplayHomeAsUpEnabled(true);
 
         initViews();
         setUpRecyclerView();
@@ -130,7 +131,7 @@ public class FollowersActivity extends AppCompatActivity {
             case android.R.id.home:
                 // todo: goto back activity from here
 
-                Intent intent = new Intent(FollowersActivity.this, MainActivity.class);
+                Intent intent = new Intent(FollowersActivity.this, LoginActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -150,7 +151,9 @@ public class FollowersActivity extends AppCompatActivity {
                 startActivity(getIntent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK));
                 changeLang.changeLang(lang);
                 Toast.makeText(this, getString(R.string.lang_success), Toast.LENGTH_SHORT).show();
-
+                return true;
+            case R.id.log_out:
+                logOut();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -158,22 +161,17 @@ public class FollowersActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        changeLang.loadLocale();
-/*        getBaseContext().getResources().updateConfiguration(newConfig, getBaseContext().getResources().getDisplayMetrics());
-        setContentView(R.layout.main);
-        setTitle(R.string.app_name);
-
-        // Checks the active language
-        if (newConfig.locale == Locale.ENGLISH) {
-            Toast.makeText(this, "English", Toast.LENGTH_SHORT).show();
-        } else if (newConfig.locale == Locale.FRENCH){
-            Toast.makeText(this, "French", Toast.LENGTH_SHORT).show();*/
-        //}
+    private void logOut() {
+        SharedPreferences pref = getApplicationContext().getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean(IS_LOGED_IN, false);
+        editor.commit();
+        Intent intent = new Intent(FollowersActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
+
 
     //========================================================================================================
     private void initViews() {

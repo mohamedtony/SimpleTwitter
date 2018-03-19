@@ -1,4 +1,4 @@
-package com.example.tony.simpletwitter;
+package com.example.tony.simpletwitter.utilities;
 
 import android.app.Application;
 import android.util.Log;
@@ -18,9 +18,6 @@ public class SimpleTwitter extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        ChangeLanguage changeLanguage=new ChangeLanguage(this);
-        changeLanguage.loadLocale();
-
 
         TwitterConfig config = new TwitterConfig.Builder(this)
                 .logger(new DefaultLogger(Log.DEBUG))

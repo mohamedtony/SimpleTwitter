@@ -1,4 +1,4 @@
-package com.example.tony.simpletwitter;
+package com.example.tony.simpletwitter.utilities;
 
 import com.example.tony.simpletwitter.models.FollowersResponse;
 import com.example.tony.simpletwitter.models.TweetModel;

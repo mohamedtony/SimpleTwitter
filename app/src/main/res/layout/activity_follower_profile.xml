@@ -35,15 +35,8 @@
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 android:layoutDirection="locale"
                 >
-
-                <!--
-                            <include
-                                layout="@layout/part_header"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:layout_collapseMode="parallax"/>
-                -->
                 <ImageView
+                    android:id="@+id/user_image_back"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:scaleType="fitXY"

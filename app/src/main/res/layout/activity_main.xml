@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layoutDirection="locale"
     tools:targetApi="jelly_bean_mr1"
-    tools:context="com.example.tony.simpletwitter.views.MainActivity">
+    tools:context="com.example.tony.simpletwitter.views.LoginActivity">
 
     <com.twitter.sdk.android.core.identity.TwitterLoginButton
         android:id="@+id/login_button"

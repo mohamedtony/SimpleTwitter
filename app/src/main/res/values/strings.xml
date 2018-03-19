@@ -5,6 +5,7 @@
     <string name="com.twitter.sdk.android.CONSUMER_SECRET" translatable="false">mpTKcZwt88UxXQeMLWP6XAia9UAJ85lpXlerCCBIygobXcXbG7</string>
     <string name="lang_success">language changed successfully!</string>
     <string name="lang">Lang</string>
-    <string name="arabic">العربية</string>
-    <string name="english">English</string>
+    <string name="arabic" translatable="false">العربية</string>
+    <string name="english" translatable="false">English</string>
+    <string name="log_out">Log Out</string>
 </resources>
