@@ -18,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -128,14 +129,14 @@ public class FollowersActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         String lang="";
         switch (item.getItemId()) {
-            case android.R.id.home:
+/*            case android.R.id.home:
                 // todo: goto back activity from here
 
                 Intent intent = new Intent(FollowersActivity.this, LoginActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
-                return true;
+                return true;*/
 
             case R.id.english:
                 lang = "en";
@@ -185,7 +186,7 @@ public class FollowersActivity extends AppCompatActivity {
         //============================ for Recycler view==============
 
         if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
             ItemOffsetDecoration itemDecoration = new ItemOffsetDecoration(this, R.dimen.item_offset);
             recyclerView.addItemDecoration(itemDecoration);
 

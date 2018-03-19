@@ -8,4 +8,6 @@
     <string name="arabic" translatable="false">العربية</string>
     <string name="english" translatable="false">English</string>
     <string name="log_out">Log Out</string>
+    <string name="snackbar_text">Oops! No Network Connectivity</string>
+    <string name="snackbar_action">Retry</string>
 </resources>
